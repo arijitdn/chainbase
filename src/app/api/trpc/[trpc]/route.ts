@@ -1,8 +1,7 @@
-/** biome-ignore-all assist/source/organizeImports: <> */
-
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
+
 const handler = (req: Request) =>
   fetchRequestHandler({
     endpoint: "/api/trpc",
