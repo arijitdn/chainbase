@@ -1,11 +1,15 @@
+import { inngest } from "@/inngest/client";
 import { createTRPCRouter, protectedProcedure } from "../init";
 
 export const appRouter = createTRPCRouter({
-  getUsers: protectedProcedure.query(({ ctx }) => {
-    return {
-      greeting: `Hello, ${ctx.auth.user.name}`,
-    };
+  createWorkflow: protectedProcedure.mutation(async ({ ctx }) => {
+    await inngest.send({
+      name: "test/hello.world",
+      data: {
+        email: "contact@arijit.dev",
+      },
+    });
   }),
 });
-// export type definition of API
+
 export type AppRouter = typeof appRouter;
