@@ -62,6 +62,7 @@ export const RegisterForm = () => {
       },
       {
         onSuccess: () => {
+          toast.success("Signed up successfully");
           router.push("/");
         },
         onError: (ctx) => {
