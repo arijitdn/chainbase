@@ -1,7 +1,10 @@
-import { google } from "@ai-sdk/google";
-import { generateText } from "ai";
 import { inngest } from "@/inngest/client";
-import { createTRPCRouter, protectedProcedure } from "../init";
+import { polarClient } from "@/lib/polar";
+import {
+  createTRPCRouter,
+  premiumProcedure,
+  protectedProcedure,
+} from "../init";
 
 export const appRouter = createTRPCRouter({
   testAI: protectedProcedure.mutation(async () => {
@@ -21,6 +24,13 @@ export const appRouter = createTRPCRouter({
     });
 
     return { success: true, message: "Job queued" };
+  }),
+
+  testPremium: premiumProcedure.query(async () => {
+    return {
+      success: true,
+      message: "Subscription active",
+    };
   }),
 });
 

@@ -3,6 +3,7 @@
 import {
   CreditCardIcon,
   FolderOpenIcon,
+  GemIcon,
   HistoryIcon,
   KeyIcon,
   LogOut,
@@ -14,6 +15,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import { toast } from "sonner";
+import { useActiveSubscription } from "@/features/payments/hooks/use-subscription";
 import { authClient } from "@/lib/auth-client";
 import {
   Sidebar,
@@ -26,6 +28,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar";
+import { Skeleton } from "./ui/skeleton";
 
 interface IMenuItems {
   title: string;
@@ -64,6 +67,8 @@ const menuItems: IMenuItems[] = [
 export const AppSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { hasActiveSubscription, isLoading, subscription } =
+    useActiveSubscription();
 
   return (
     <Sidebar collapsible="icon">
@@ -113,21 +118,65 @@ export const AppSidebar = () => {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Upgrade to Pro"
-              className="gap-x-4 h-10 px-4"
-              onClick={() => {}}
-            >
-              <StarIcon className="h-4 w-4" />
-              <span>Upgrade to Pro</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {isLoading ? (
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-10 w-[150px]" />
+              </div>
+            </div>
+          ) : (
+            <SidebarMenuItem>
+              {!hasActiveSubscription ? (
+                <SidebarMenuButton
+                  tooltip="Upgrade to Pro"
+                  className="gap-x-4 h-10 px-4"
+                  onClick={() =>
+                    authClient.checkout({
+                      slug: "chainbase-pro",
+                    })
+                  }
+                >
+                  <StarIcon className="h-4 w-4" />
+                  <span>Upgrade to Pro</span>
+                </SidebarMenuButton>
+              ) : (
+                <SidebarMenuButton
+                  tooltip={
+                    subscription?.productId ===
+                    "1991f990-dfb8-46dc-a5bc-799ee8f07437"
+                      ? "Chainbase Gold"
+                      : "Chainbase Pro"
+                  }
+                  className="gap-x-4 h-10 px-4"
+                  onClick={() =>
+                    toast.success(
+                      `${
+                        subscription?.productId ===
+                        "1991f990-dfb8-46dc-a5bc-799ee8f07437"
+                          ? "Chainbase Gold"
+                          : "Chainbase Pro"
+                      } is active`,
+                    )
+                  }
+                >
+                  <GemIcon className="h-4 w-4 text-yellow-500" />
+                  <span>
+                    {subscription?.productId ===
+                    "1991f990-dfb8-46dc-a5bc-799ee8f07437"
+                      ? "Chainbase Gold"
+                      : "Chainbase Pro"}
+                  </span>
+                </SidebarMenuButton>
+              )}
+            </SidebarMenuItem>
+          )}
+
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Billing Portal"
               className="gap-x-4 h-10 px-4"
-              onClick={() => {}}
+              onClick={() => authClient.customer.portal()}
             >
               <CreditCardIcon className="h-4 w-4" />
               <span>Billing Portal</span>
