@@ -160,7 +160,13 @@ export const AppSidebar = () => {
                     )
                   }
                 >
-                  <GemIcon className="h-4 w-4 text-yellow-500" />
+                  {subscription?.productId ===
+                  "1991f990-dfb8-46dc-a5bc-799ee8f07437" ? (
+                    <GemIcon className="h-4 w-4 text-orange-500" />
+                  ) : (
+                    <GemIcon className="h-4 w-4" />
+                  )}
+
                   <span>
                     {subscription?.productId ===
                     "1991f990-dfb8-46dc-a5bc-799ee8f07437"
