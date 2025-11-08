@@ -8,6 +8,7 @@ import {
   KeyIcon,
   LogOut,
   type LucideProps,
+  SparklesIcon,
   StarIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -69,6 +70,32 @@ export const AppSidebar = () => {
   const router = useRouter();
   const { hasActiveSubscription, isLoading, subscription } =
     useActiveSubscription();
+
+  const getSubscriptionName = (subscriptionId: string) => {
+    switch (subscriptionId) {
+      case "9cc1a72a-96fc-4d07-ae0d-2f13cad572f2":
+        return "Chainbase Pro";
+      case "1991f990-dfb8-46dc-a5bc-799ee8f07437":
+        return "Chainbase Gold";
+      case "201afdb8-2dcc-45b0-b358-fa5482ac205e":
+        return "Chainbase Enterprise";
+      default:
+        return "Upgrade to Pro";
+    }
+  };
+
+  const getSubscriptionLogo = (subscriptionId: string) => {
+    switch (subscriptionId) {
+      case "9cc1a72a-96fc-4d07-ae0d-2f13cad572f2":
+        return <GemIcon className="h-4 w-4" />;
+      case "1991f990-dfb8-46dc-a5bc-799ee8f07437":
+        return <GemIcon className="h-4 w-4 text-primary" />;
+      case "201afdb8-2dcc-45b0-b358-fa5482ac205e":
+        return <SparklesIcon className="h-4 w-4 text-primary" />;
+      default:
+        return <StarIcon className="h-4 w-4" />;
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -142,36 +169,19 @@ export const AppSidebar = () => {
                 </SidebarMenuButton>
               ) : (
                 <SidebarMenuButton
-                  tooltip={
-                    subscription?.productId ===
-                    "1991f990-dfb8-46dc-a5bc-799ee8f07437"
-                      ? "Chainbase Gold"
-                      : "Chainbase Pro"
-                  }
+                  tooltip={getSubscriptionName(subscription?.productId ?? "")}
                   className="gap-x-4 h-10 px-4"
                   onClick={() =>
                     toast.success(
-                      `${
-                        subscription?.productId ===
-                        "1991f990-dfb8-46dc-a5bc-799ee8f07437"
-                          ? "Chainbase Gold"
-                          : "Chainbase Pro"
-                      } is active`,
+                      `${getSubscriptionName(
+                        subscription?.productId ?? "",
+                      )} is active`,
                     )
                   }
                 >
-                  {subscription?.productId ===
-                  "1991f990-dfb8-46dc-a5bc-799ee8f07437" ? (
-                    <GemIcon className="h-4 w-4 text-orange-500" />
-                  ) : (
-                    <GemIcon className="h-4 w-4" />
-                  )}
-
+                  {getSubscriptionLogo(subscription?.productId ?? "")}
                   <span>
-                    {subscription?.productId ===
-                    "1991f990-dfb8-46dc-a5bc-799ee8f07437"
-                      ? "Chainbase Gold"
-                      : "Chainbase Pro"}
+                    {getSubscriptionName(subscription?.productId ?? "")}
                   </span>
                 </SidebarMenuButton>
               )}

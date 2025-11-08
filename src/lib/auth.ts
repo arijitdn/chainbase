@@ -27,6 +27,10 @@ export const auth = betterAuth({
               productId: "1991f990-dfb8-46dc-a5bc-799ee8f07437",
               slug: "chainbase-gold",
             },
+            {
+              productId: "201afdb8-2dcc-45b0-b358-fa5482ac205e",
+              slug: "chainbase-enterprise",
+            },
           ],
           successUrl: process.env.POLAR_SUCCESS_URL,
           authenticatedUsersOnly: true,
