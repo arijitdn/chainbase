@@ -62,10 +62,17 @@ export const workflowsRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        name: z.string().min(1),
+        name: z.string(),
       }),
     )
     .mutation(({ ctx, input }) => {
+      if (input.name.length < 5) {
+        throw new TRPCError({
+          message: "Name must be of minimum five characters",
+          code: "BAD_REQUEST",
+        });
+      }
+
       return prisma.workflow.update({
         where: {
           id: input.id,
@@ -84,7 +91,7 @@ export const workflowsRouter = createTRPCRouter({
       }),
     )
     .query(({ ctx, input }) => {
-      return prisma.workflow.findUnique({
+      return prisma.workflow.findUniqueOrThrow({
         where: {
           id: input.id,
           userId: ctx.auth.user.id,
