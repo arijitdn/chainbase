@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
@@ -15,6 +16,11 @@ interface PageProps {
     workflowId: string;
   }>;
 }
+
+export const metadata: Metadata = {
+  title: "Chainbase - Editor",
+  description: "Edit your workflows and it works magically",
+};
 
 export default async function Page({ params }: PageProps) {
   await requireAuth();
