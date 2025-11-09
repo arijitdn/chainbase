@@ -23,7 +23,7 @@ export default async function Page({ params }: PageProps) {
   prefetchWorkflow(workflowId);
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <HydrateClient>
         <ErrorBoundary fallback={<EditorError />}>
           <Suspense fallback={<EditorLoading />}>

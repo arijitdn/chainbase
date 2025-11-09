@@ -52,7 +52,10 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
   }, [isEditing]);
 
   const handleSave = async () => {
-    if (name === workflow.name) {
+    // Replace spaces with hyphens and trim
+    const formattedName = name.trim().replace(/\s+/g, "-");
+
+    if (formattedName === workflow.name) {
       setIsEditing(false);
       return;
     }
@@ -60,8 +63,9 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
     try {
       await updateWorkflow.mutateAsync({
         id: workflowId,
-        name,
+        name: formattedName,
       });
+      setName(formattedName);
     } catch {
       setName(workflow.name);
     } finally {
