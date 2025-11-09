@@ -3,8 +3,10 @@ import { headers } from "next/headers";
 import { generateSlug } from "random-word-slugs";
 import z from "zod";
 import { PAGINATION } from "@/config/constants";
+import { LIMITS } from "@/config/limits";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { getSubscriptionName } from "@/lib/getSubscriptionName";
 import {
   createTRPCRouter,
   premiumProcedure,
@@ -22,14 +24,13 @@ export const workflowsRouter = createTRPCRouter({
       headers: await headers(),
     });
 
-    if (
-      !subscriptions ||
-      (subscriptions.result.items[0].productId !==
-        "1991f990-dfb8-46dc-a5bc-799ee8f07437" &&
-        workflows.length >= 5)
-    ) {
+    const subscription = getSubscriptionName(
+      subscriptions.result.items[0].productId,
+    );
+
+    if (subscription === "free" || workflows.length >= LIMITS[subscription]) {
       throw new TRPCError({
-        message: `You have utilised all of the limits. (${workflows.length}/5)`,
+        message: `You have utilised all of the limits of ${subscription.charAt(0).toUpperCase() + subscription.slice(1, subscription.length)} plan.`,
         code: "FORBIDDEN",
       });
     }

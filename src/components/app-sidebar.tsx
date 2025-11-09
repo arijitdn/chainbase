@@ -2,6 +2,7 @@
 
 import {
   CreditCardIcon,
+  CrownIcon,
   FolderOpenIcon,
   GemIcon,
   HistoryIcon,
@@ -87,11 +88,11 @@ export const AppSidebar = () => {
   const getSubscriptionLogo = (subscriptionId: string) => {
     switch (subscriptionId) {
       case "9cc1a72a-96fc-4d07-ae0d-2f13cad572f2":
-        return <GemIcon className="h-4 w-4" />;
+        return <GemIcon className="h-4 w-4 text-blue-500" />;
       case "1991f990-dfb8-46dc-a5bc-799ee8f07437":
-        return <GemIcon className="h-4 w-4 text-primary" />;
+        return <CrownIcon className="size-7 text-primary" />;
       case "201afdb8-2dcc-45b0-b358-fa5482ac205e":
-        return <SparklesIcon className="h-4 w-4 text-primary" />;
+        return <SparklesIcon className="h-4 w-4 text-purple-500" />;
       default:
         return <StarIcon className="h-4 w-4" />;
     }
