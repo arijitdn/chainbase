@@ -5,6 +5,7 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
   Background,
+  BackgroundVariant,
   type Connection,
   Controls,
   type Edge,
@@ -14,13 +15,16 @@ import {
   type NodeChange,
   Panel,
   ReactFlow,
+  type ReactFlowInstance,
 } from "@xyflow/react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ErrorView, LoadingView } from "@/components/entity-components";
 import { useSuspenseWorkflow } from "@/features/workflows/hooks/use-workflows";
 
 import "@xyflow/react/dist/style.css";
+import { useSetAtom } from "jotai";
 import { nodeComponents } from "@/config/node-components";
+import { editorAtom } from "../store/atoms";
 import { AddNodeButton } from "./add-node-button";
 
 export const EditorLoading = () => {
@@ -33,6 +37,9 @@ export const EditorError = () => {
 
 export const Editor = ({ workflowId }: { workflowId: string }) => {
   const { data: workflow } = useSuspenseWorkflow(workflowId);
+
+  const setEditor = useSetAtom(editorAtom);
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   const [nodes, setNodes] = useState<Node[]>(workflow.nodes);
   const [edges, setEdges] = useState<Edge[]>(workflow.edges);
@@ -53,8 +60,15 @@ export const Editor = ({ workflowId }: { workflowId: string }) => {
     [],
   );
 
+  const onInit = useCallback(
+    (instance: ReactFlowInstance) => {
+      setEditor(instance);
+    },
+    [setEditor],
+  );
+
   return (
-    <div className="size-full">
+    <div ref={reactFlowWrapper} className="size-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -63,11 +77,16 @@ export const Editor = ({ workflowId }: { workflowId: string }) => {
         onConnect={onConnect}
         fitView
         nodeTypes={nodeComponents}
+        onInit={onInit}
         proOptions={{
           hideAttribution: true,
         }}
+        snapToGrid
+        panOnScroll
+        panOnDrag
+        selectionOnDrag
       >
-        <Background />
+        <Background variant={BackgroundVariant.Dots} />
         <Controls />
         <MiniMap />
         <Panel position="top-right">
