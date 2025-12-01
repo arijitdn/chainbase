@@ -1,6 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
+  ChevronsUpDown,
   CreditCardIcon,
   CrownIcon,
   FolderOpenIcon,
@@ -17,8 +19,20 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
 import { useActiveSubscription } from "@/features/payments/hooks/use-subscription";
 import { authClient } from "@/lib/auth-client";
+import { useTRPC } from "@/trpc/client";
 import {
   Sidebar,
   SidebarContent,
@@ -69,32 +83,45 @@ const menuItems: IMenuItems[] = [
 export const AppSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { hasActiveSubscription, isLoading, subscription } =
+  const { subscription, isLoading: isSubscriptionLoading } =
     useActiveSubscription();
+  const trpc = useTRPC();
+  const { data: usage } = useQuery({
+    ...trpc.workflows.getUsage.queryOptions(),
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+  });
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data } = await authClient.getSession();
+      return data;
+    },
+  });
 
   const getSubscriptionName = (subscriptionId: string) => {
     switch (subscriptionId) {
       case "9cc1a72a-96fc-4d07-ae0d-2f13cad572f2":
-        return "Chainbase Pro";
+        return "Pro";
       case "1991f990-dfb8-46dc-a5bc-799ee8f07437":
-        return "Chainbase Gold";
+        return "Gold";
       case "201afdb8-2dcc-45b0-b358-fa5482ac205e":
-        return "Chainbase Enterprise";
+        return "Enterprise";
       default:
         return "Upgrade to Pro";
     }
   };
 
-  const getSubscriptionLogo = (subscriptionId: string) => {
+  const getSubscriptionIcon = (subscriptionId?: string) => {
     switch (subscriptionId) {
-      case "9cc1a72a-96fc-4d07-ae0d-2f13cad572f2":
-        return <GemIcon className="h-4 w-4 text-blue-500" />;
-      case "1991f990-dfb8-46dc-a5bc-799ee8f07437":
-        return <CrownIcon className="size-7 text-primary" />;
-      case "201afdb8-2dcc-45b0-b358-fa5482ac205e":
-        return <SparklesIcon className="h-4 w-4 text-purple-500" />;
+      case "9cc1a72a-96fc-4d07-ae0d-2f13cad572f2": // Pro
+        return <GemIcon className="mr-2 h-4 w-4 text-blue-500" />;
+      case "1991f990-dfb8-46dc-a5bc-799ee8f07437": // Gold
+        return <CrownIcon className="mr-2 h-4 w-4 text-yellow-500" />;
+      case "201afdb8-2dcc-45b0-b358-fa5482ac205e": // Enterprise
+        return <SparklesIcon className="mr-2 h-4 w-4 text-purple-500" />;
       default:
-        return <StarIcon className="h-4 w-4" />;
+        return <StarIcon className="mr-2 h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -146,84 +173,153 @@ export const AppSidebar = () => {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          {isLoading ? (
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-10 w-[150px]" />
-              </div>
-            </div>
-          ) : (
-            <SidebarMenuItem>
-              {!hasActiveSubscription ? (
-                <SidebarMenuButton
-                  tooltip="Upgrade to Pro"
-                  className="gap-x-4 h-10 px-4"
-                  onClick={() =>
-                    authClient.checkout({
-                      slug: "chainbase-pro",
-                    })
-                  }
-                >
-                  <StarIcon className="h-4 w-4" />
-                  <span>Upgrade to Pro</span>
-                </SidebarMenuButton>
-              ) : (
-                <SidebarMenuButton
-                  tooltip={getSubscriptionName(subscription?.productId ?? "")}
-                  className="gap-x-4 h-10 px-4"
-                  onClick={() =>
-                    toast.success(
-                      `${getSubscriptionName(
-                        subscription?.productId ?? "",
-                      )} is active`,
-                    )
-                  }
-                >
-                  {getSubscriptionLogo(subscription?.productId ?? "")}
-                  <span>
-                    {getSubscriptionName(subscription?.productId ?? "")}
-                  </span>
-                </SidebarMenuButton>
-              )}
-            </SidebarMenuItem>
-          )}
-
           <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Billing Portal"
-              className="gap-x-4 h-10 px-4"
-              onClick={() => authClient.customer.portal()}
-            >
-              <CreditCardIcon className="h-4 w-4" />
-              <span>Billing Portal</span>
-            </SidebarMenuButton>
+            {isSubscriptionLoading ? (
+              <SidebarMenuButton className="gap-x-4 h-10 px-4">
+                <Skeleton className="h-4 w-4 rounded" />
+                <Skeleton className="h-4 w-24 rounded" />
+              </SidebarMenuButton>
+            ) : subscription?.productId ? (
+              <SidebarMenuButton
+                tooltip="Billing Portal"
+                className="gap-x-4 h-10 px-4"
+                onClick={() => authClient.customer.portal()}
+              >
+                <CreditCardIcon className="h-4 w-4" />
+                <span>Billing Portal</span>
+              </SidebarMenuButton>
+            ) : (
+              <SidebarMenuButton
+                tooltip="Upgrade to Pro"
+                className="gap-x-4 h-10 px-4"
+                onClick={() => authClient.checkout({ slug: "chainbase-pro" })}
+              >
+                <GemIcon className="h-4 w-4 text-blue-500" />
+                <span>Upgrade to Pro</span>
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Sign out"
-              className="gap-x-4 h-10 px-4"
-              onClick={() => {
-                authClient.signOut({
-                  fetchOptions: {
-                    onSuccess: () => {
-                      toast.success("Signed out successfully");
-                      router.replace("/login");
-                    },
-                    onError: ({ error }) => {
-                      if (error.message) {
-                        toast.error(`Failed to sign out: ${error.message}`);
-                      } else {
-                        toast.error("Failed to sign out");
-                      }
-                    },
-                  },
-                });
-              }}
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sign out</span>
-            </SidebarMenuButton>
+            {isSessionLoading ? (
+              <div className="flex items-center gap-2 p-2">
+                <Skeleton className="h-8 w-8 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[100px]" />
+                  <Skeleton className="h-3 w-[80px]" />
+                </div>
+              </div>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground focus-visible:ring-0"
+                  >
+                    <Avatar className="h-8 w-8 rounded-lg">
+                      <AvatarImage
+                        src={session?.user?.image || ""}
+                        alt={session?.user?.name || ""}
+                      />
+                      <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
+                        {session?.user?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">
+                        {session?.user?.name}
+                      </span>
+                      <span className="truncate text-xs">
+                        {subscription?.productId
+                          ? getSubscriptionName(subscription.productId)
+                          : "Free"}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
+                >
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <Avatar className="h-8 w-8 rounded-lg">
+                        <AvatarImage
+                          src={session?.user?.image || ""}
+                          alt={session?.user?.name || ""}
+                        />
+                        <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
+                          {session?.user?.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {session?.user?.name}
+                        </span>
+                        <span className="truncate text-xs">
+                          {session?.user?.email}
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem>
+                      {getSubscriptionIcon(subscription?.productId)}
+                      <span>
+                        {subscription?.productId
+                          ? getSubscriptionName(subscription.productId)
+                          : "Free"}
+                      </span>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <div className="p-2">
+                      <p className="text-xs font-medium mb-2">Usage</p>
+                      <Progress
+                        value={
+                          ((usage?.workflowsCount || 0) / (usage?.limit || 1)) *
+                          100
+                        }
+                        className="h-2"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {usage?.workflowsCount || 0} / {usage?.limit || 0}{" "}
+                        Workflows
+                      </p>
+                    </div>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      authClient.signOut({
+                        fetchOptions: {
+                          onSuccess: () => {
+                            toast.success("Signed out successfully");
+                            router.replace("/login");
+                          },
+                          onError: ({ error }) => {
+                            if (error.message) {
+                              toast.error(
+                                `Failed to sign out: ${error.message}`,
+                              );
+                            } else {
+                              toast.error("Failed to sign out");
+                            }
+                          },
+                        },
+                      });
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

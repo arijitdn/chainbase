@@ -133,6 +133,9 @@ interface EntityPaginationProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   disabled?: boolean;
+  totalCount?: number;
+  pageSize?: number;
+  entityName?: string;
 }
 
 export const EntityPagination = ({
@@ -140,11 +143,25 @@ export const EntityPagination = ({
   totalPages,
   onPageChange,
   disabled,
+  totalCount,
+  pageSize,
+  entityName = "items",
 }: EntityPaginationProps) => {
+  const endItem = Math.min(page * (pageSize || 0), totalCount || 0);
+
   return (
     <div className="flex items-center justify-between gap-x-2 w-full">
       <div className="flex-1 text-sm text-muted-foreground">
-        Page {page} of {totalPages || 1}
+        {totalCount !== undefined && pageSize !== undefined ? (
+          <>
+            {endItem} of {totalCount} {entityName} • Page {page} of{" "}
+            {totalPages || 1}
+          </>
+        ) : (
+          <>
+            Page {page} of {totalPages || 1}
+          </>
+        )}
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <Button

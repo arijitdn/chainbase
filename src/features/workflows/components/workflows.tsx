@@ -92,6 +92,9 @@ export const WorflowsPagination = () => {
       disabled={workflows.isFetching}
       totalPages={workflows.data.totalPages}
       page={workflows.data.page}
+      totalCount={workflows.data.totalCount}
+      pageSize={workflows.data.pageSize}
+      entityName="workflows"
       onPageChange={(page) =>
         setParams({
           ...params,

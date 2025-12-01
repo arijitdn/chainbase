@@ -66,7 +66,7 @@ export const LoginForm = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="w-full min-w-md">
         <CardHeader className="text-center">
           <CardTitle>Welcome Back</CardTitle>
           <CardDescription>Login to continue</CardDescription>

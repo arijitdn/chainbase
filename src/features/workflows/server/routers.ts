@@ -1,14 +1,15 @@
 import { TRPCError } from "@trpc/server";
-import { type Edge, type Node, Position } from "@xyflow/react";
+import type { Edge, Node } from "@xyflow/react";
 import { headers } from "next/headers";
 import { generateSlug } from "random-word-slugs";
 import z from "zod";
 import { PAGINATION } from "@/config/constants";
 import { LIMITS } from "@/config/limits";
 import { NodeType } from "@/generated/prisma";
+import { inngest } from "@/inngest/client";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { getSubscriptionName } from "@/lib/getSubscriptionName";
+import { getSubscriptionName } from "@/lib/get-subscription-name";
 import {
   createTRPCRouter,
   premiumProcedure,
@@ -16,7 +17,30 @@ import {
 } from "@/trpc/init";
 
 export const workflowsRouter = createTRPCRouter({
-  create: premiumProcedure.mutation(async ({ ctx }) => {
+  execute: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const workflow = await prisma.workflow.findUniqueOrThrow({
+        where: {
+          id: input.id,
+          userId: ctx.auth.user.id,
+        },
+      });
+
+      await inngest.send({
+        name: "events/execute.workflow",
+        data: {
+          workflowId: input.id,
+        },
+      });
+
+      return workflow;
+    }),
+  create: protectedProcedure.mutation(async ({ ctx }) => {
     const workflows = await prisma.workflow.findMany({
       where: {
         userId: ctx.auth.user.id,
@@ -27,10 +51,10 @@ export const workflowsRouter = createTRPCRouter({
     });
 
     const subscription = getSubscriptionName(
-      subscriptions.result.items[0].productId,
+      subscriptions.result.items[0]?.productId,
     );
 
-    if (subscription === "free" || workflows.length >= LIMITS[subscription]) {
+    if (workflows.length >= LIMITS[subscription]) {
       throw new TRPCError({
         message: `You have utilised all of the limits of ${subscription.charAt(0).toUpperCase() + subscription.slice(1, subscription.length)} plan.`,
         code: "FORBIDDEN",
@@ -74,10 +98,10 @@ export const workflowsRouter = createTRPCRouter({
         name: z.string(),
       }),
     )
-    .mutation(({ ctx, input }) => {
-      if (input.name.length < 5) {
+    .mutation(async ({ ctx, input }) => {
+      if (input.name.length < 3) {
         throw new TRPCError({
-          message: "Name must be of minimum five characters",
+          message: "Name should be minimum of 3 characters",
           code: "BAD_REQUEST",
         });
       }
@@ -265,4 +289,27 @@ export const workflowsRouter = createTRPCRouter({
         hasPrevPage,
       };
     }),
+  getUsage: protectedProcedure.query(async ({ ctx }) => {
+    const workflowsCount = await prisma.workflow.count({
+      where: {
+        userId: ctx.auth.user.id,
+      },
+    });
+
+    const subscriptions = await auth.api.subscriptions({
+      headers: await headers(),
+    });
+
+    const subscriptionName = getSubscriptionName(
+      subscriptions.result.items[0]?.productId,
+    );
+
+    const limit = LIMITS[subscriptionName as keyof typeof LIMITS];
+
+    return {
+      workflowsCount,
+      limit,
+      subscriptionName,
+    };
+  }),
 });
