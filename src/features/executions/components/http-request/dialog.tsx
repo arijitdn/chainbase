@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { JsonEditor } from "./json-editor";
 
 const formSchema = z.object({
   variableName: z
@@ -94,7 +94,7 @@ export const HTTPRequestDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>HTTP Request</DialogTitle>
           <DialogDescription>
@@ -104,101 +104,103 @@ export const HTTPRequestDialog = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-8 mt-4"
+            className="flex flex-col overflow-hidden"
           >
-            <FormField
-              control={form.control}
-              name="variableName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Variable Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="myApiCall" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Use this name to reference the result in other nodes{" "}
-                    <span className="font-mono">{`{{${watchVariableName || "myApiCall"}.httpResponse.data}}`}</span>
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Method</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="GET">GET</SelectItem>
-                      <SelectItem value="POST">POST</SelectItem>
-                      <SelectItem value="PUT">PUT</SelectItem>
-                      <SelectItem value="PATCH">PATCH</SelectItem>
-                      <SelectItem value="DELETE">DELETE</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    The HTTP method to use for this request
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="endpoint"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Endpoint URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://api.example.com/v1/users/{{httpResponse.data.id}}"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Static URL or use{" "}
-                    <span className="font-mono">{"{{variables}}"}</span> for
-                    simple values or{" "}
-                    <span className="font-mono">{"{{json variable}}"}</span> to
-                    stringify objects
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {showBody && (
+            <div className="space-y-8 mt-4 overflow-y-auto pr-2">
               <FormField
                 control={form.control}
-                name="body"
+                name="variableName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Request Body</FormLabel>
-                    <Textarea
-                      placeholder={`{\n "userId": "{{httpResponse.data.id}}",\n "items": "{{httpResponse.data.items}}"\n}`}
-                      className="min-h-[120px] font-mono text-sm"
-                      {...field}
-                    />
+                    <FormLabel>Variable Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="myApiCall" {...field} />
+                    </FormControl>
                     <FormDescription>
-                      JSON with template variables. Use {"{{variables}}"} for
-                      simple values or {"{{json variable}}"} to stringify
-                      objects
+                      Use this name to reference the result in other nodes{" "}
+                      <span className="font-mono">{`{{${watchVariableName || "myApiCall"}.response.data}}`}</span>
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
-            <DialogFooter className="mt-4">
+              <FormField
+                control={form.control}
+                name="method"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Method</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="GET">GET</SelectItem>
+                        <SelectItem value="POST">POST</SelectItem>
+                        <SelectItem value="PUT">PUT</SelectItem>
+                        <SelectItem value="PATCH">PATCH</SelectItem>
+                        <SelectItem value="DELETE">DELETE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      The HTTP method to use for this request
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endpoint"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endpoint URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://api.example.com/v1/users/{{response.data.id}}"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Static URL or use{" "}
+                      <span className="font-mono">{"{{variables}}"}</span> for
+                      simple values or{" "}
+                      <span className="font-mono">{"{{json variable}}"}</span>{" "}
+                      to stringify objects
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {showBody && (
+                <FormField
+                  control={form.control}
+                  name="body"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Request Body</FormLabel>
+                      <JsonEditor
+                        placeholder={`{\n "userId": "{{response.data.id}}",\n "items": "{{response.data.items}}"\n}`}
+                        className="h-[120px] font-mono text-sm"
+                        {...field}
+                      />
+                      <FormDescription>
+                        JSON with template variables. Use {"{{variables}}"} for
+                        simple values or {"{{json variable}}"} to stringify
+                        objects
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+            <DialogFooter className="mt-4 shrink-0">
               <Button type="submit">Save</Button>
             </DialogFooter>
           </form>
