@@ -33,6 +33,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
+  variableName: z
+    .string()
+    .min(1, { message: "Variable name is required" })
+    .regex(/^[A-Za-z_$][A-Za-z0-9_$]*/, {
+      message:
+        "Variable name must start with a letter or underscore and container only letters, numbers, and underscores",
+    }),
   endpoint: z.url({
     message: "Please enter a valid url",
   }),
@@ -58,6 +65,7 @@ export const HTTPRequestDialog = ({
   const form = useForm<HTTPRequestFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      variableName: defaultValues.variableName || "",
       endpoint: defaultValues.endpoint || "",
       method: defaultValues.method || "GET",
       body: defaultValues.body || "",
@@ -67,6 +75,7 @@ export const HTTPRequestDialog = ({
   useEffect(() => {
     if (open) {
       form.reset({
+        variableName: defaultValues.variableName || "",
         endpoint: defaultValues.endpoint || "",
         method: defaultValues.method || "GET",
         body: defaultValues.body || "",
@@ -74,6 +83,7 @@ export const HTTPRequestDialog = ({
     }
   }, [open, defaultValues, form]);
 
+  const watchVariableName = form.watch("variableName");
   const watchMethod = form.watch("method");
   const showBody = ["POST", "PUT", "PATCH"].includes(watchMethod);
 
@@ -96,6 +106,23 @@ export const HTTPRequestDialog = ({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-8 mt-4"
           >
+            <FormField
+              control={form.control}
+              name="variableName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Variable Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="myApiCall" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Use this name to reference the result in other nodes{" "}
+                    <span className="font-mono">{`{{${watchVariableName || "myApiCall"}.httpResponse.data}}`}</span>
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="method"
@@ -139,8 +166,11 @@ export const HTTPRequestDialog = ({
                     />
                   </FormControl>
                   <FormDescription>
-                    Static URL or use {"{{variables}}"} for simple values or{" "}
-                    {"{{json variable}}"} to stringify objects
+                    Static URL or use{" "}
+                    <span className="font-mono">{"{{variables}}"}</span> for
+                    simple values or{" "}
+                    <span className="font-mono">{"{{json variable}}"}</span> to
+                    stringify objects
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

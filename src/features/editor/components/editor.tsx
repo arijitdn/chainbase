@@ -94,7 +94,7 @@ export const Editor = ({ workflowId }: { workflowId: string }) => {
       >
         <Background variant={BackgroundVariant.Dots} />
         <Controls />
-        <MiniMap />
+        <MiniMap pannable zoomable />
         <Panel position="top-right">
           <AddNodeButton />
         </Panel>
