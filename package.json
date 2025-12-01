@@ -20,6 +20,7 @@
     "@ai-sdk/google": "^2.0.25",
     "@ai-sdk/openai": "^2.0.58",
     "@hookform/resolvers": "^5.2.2",
+    "@inngest/realtime": "^0.4.5",
     "@monaco-editor/react": "^4.7.0",
     "@paralleldrive/cuid2": "^3.0.4",
     "@polar-sh/better-auth": "^1.2.1",
