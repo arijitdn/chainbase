@@ -40,9 +40,11 @@ const formSchema = z.object({
       message:
         "Variable name must start with a letter or underscore and container only letters, numbers, and underscores",
     }),
-  endpoint: z.url({
-    message: "Please enter a valid url",
-  }),
+  endpoint: z
+    .string({
+      message: "Please enter a valid url",
+    })
+    .min(1),
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
   body: z.string().optional(),
 });

@@ -11,9 +11,11 @@
     "format": "biome format --write",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "inngest:dev": "inngest-cli dev"
+    "inngest:dev": "inngest-cli dev",
+    "ngrok:dev": "powershell -Command \"$env:NGROK_URL = (dotenv -e .env -p NGROK_URL); ngrok http --url=$env:NGROK_URL 3000\""
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.39",
@@ -98,6 +100,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/toposort": "^2.0.7",
+    "dotenv-cli": "^11.0.0",
     "import-in-the-middle": "^2.0.0",
     "inngest-cli": "^1.12.1",
     "mprocs": "^0.7.3",

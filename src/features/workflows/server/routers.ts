@@ -6,15 +6,11 @@ import z from "zod";
 import { PAGINATION } from "@/config/constants";
 import { LIMITS } from "@/config/limits";
 import { NodeType } from "@/generated/prisma";
-import { inngest } from "@/inngest/client";
+import { sendWorkflowExecution } from "@/inngest/utils";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { getSubscriptionName } from "@/lib/get-subscription-name";
-import {
-  createTRPCRouter,
-  premiumProcedure,
-  protectedProcedure,
-} from "@/trpc/init";
+import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 
 export const workflowsRouter = createTRPCRouter({
   execute: protectedProcedure
@@ -31,11 +27,8 @@ export const workflowsRouter = createTRPCRouter({
         },
       });
 
-      await inngest.send({
-        name: "events/execute.workflow",
-        data: {
-          workflowId: input.id,
-        },
+      await sendWorkflowExecution({
+        workflowId: input.id,
       });
 
       return workflow;
