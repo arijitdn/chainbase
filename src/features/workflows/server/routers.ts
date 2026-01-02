@@ -39,15 +39,22 @@ export const workflowsRouter = createTRPCRouter({
         userId: ctx.auth.user.id,
       },
     });
-    const subscriptions = await auth.api.subscriptions({
-      headers: await headers(),
-    });
 
-    const subscription = getSubscriptionName(
-      subscriptions.result.items[0]?.productId,
-    );
+    let subscription = "free";
+    try {
+      const subscriptions = await auth.api.subscriptions({
+        headers: await headers(),
+      });
 
-    if (workflows.length >= LIMITS[subscription]) {
+      subscription = getSubscriptionName(
+        subscriptions?.result?.items?.[0]?.productId,
+      );
+    } catch (error) {
+      console.error("Failed to fetch subscriptions:", error);
+      // Default to free tier if subscriptions cannot be fetched
+    }
+
+    if (workflows.length >= LIMITS[subscription as keyof typeof LIMITS]) {
       throw new TRPCError({
         message: `You have utilised all of the limits of ${subscription.charAt(0).toUpperCase() + subscription.slice(1, subscription.length)} plan.`,
         code: "FORBIDDEN",
@@ -289,13 +296,19 @@ export const workflowsRouter = createTRPCRouter({
       },
     });
 
-    const subscriptions = await auth.api.subscriptions({
-      headers: await headers(),
-    });
+    let subscriptionName = "free";
+    try {
+      const subscriptions = await auth.api.subscriptions({
+        headers: await headers(),
+      });
 
-    const subscriptionName = getSubscriptionName(
-      subscriptions.result.items[0]?.productId,
-    );
+      subscriptionName = getSubscriptionName(
+        subscriptions?.result?.items?.[0]?.productId,
+      );
+    } catch (error) {
+      console.error("Failed to fetch subscriptions:", error);
+      // Default to free tier if subscriptions cannot be fetched
+    }
 
     const limit = LIMITS[subscriptionName as keyof typeof LIMITS];
 

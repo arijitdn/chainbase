@@ -10,9 +10,9 @@ Handlebars.registerHelper("json", (context) => {
 });
 
 type HTTPRequestData = {
-  variableName: string;
-  endpoint: string;
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  variableName?: string;
+  endpoint?: string;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: string;
 };
 
@@ -30,44 +30,9 @@ export const httpRequestExecutor: NodeExecutor<HTTPRequestData> = async ({
     }),
   );
 
-  if (!data.variableName) {
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      }),
-    );
-
-    throw new NonRetriableError(
-      "HTTP Request Node: No variable name configured",
-    );
-  }
-
-  if (!data.endpoint) {
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      }),
-    );
-
-    throw new NonRetriableError("HTTP Request Node: No endpoint configured");
-  }
-
-  if (!data.method) {
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      }),
-    );
-
-    throw new NonRetriableError("HTTP Request Node: No method configured");
-  }
-
   try {
     const result = await step.run("http-request", async () => {
-      if (!data.endpoint || !data.method) {
+      if (!data.variableName) {
         await publish(
           httpRequestChannel().status({
             nodeId,
@@ -76,8 +41,32 @@ export const httpRequestExecutor: NodeExecutor<HTTPRequestData> = async ({
         );
 
         throw new NonRetriableError(
-          "HTTP Request Node: Endpoint or method not configured",
+          "HTTP Request Node: No variable name configured",
         );
+      }
+
+      if (!data.endpoint) {
+        await publish(
+          httpRequestChannel().status({
+            nodeId,
+            status: "error",
+          }),
+        );
+
+        throw new NonRetriableError(
+          "HTTP Request Node: No endpoint configured",
+        );
+      }
+
+      if (!data.method) {
+        await publish(
+          httpRequestChannel().status({
+            nodeId,
+            status: "error",
+          }),
+        );
+
+        throw new NonRetriableError("HTTP Request Node: No method configured");
       }
 
       const endpoint = Handlebars.compile(data.endpoint)(context);

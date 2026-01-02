@@ -5,6 +5,7 @@ import { getExecutor } from "@/lib/executor-registry";
 import { googleFormTriggerChannel } from "./channels/googleFormTrigger";
 import { httpRequestChannel } from "./channels/httpRequest";
 import { manualTriggerChannel } from "./channels/manualTrigger";
+import { stripeTriggerChannel } from "./channels/stripeTrigger";
 import { inngest } from "./client";
 import { topologicalSort } from "./utils";
 
@@ -16,6 +17,7 @@ export const executeWorkflow = inngest.createFunction(
       httpRequestChannel(),
       manualTriggerChannel(),
       googleFormTriggerChannel(),
+      stripeTriggerChannel(),
     ],
   },
   async ({ event, step, publish }) => {
